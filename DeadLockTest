@@ -1,0 +1,46 @@
+/*
+if和else中，如果两个线程各自都抢到了一把锁，则死锁，
+若某个线程提前抢到了两把锁 则不会出现死锁了
+*/	
+class Test implements Runnable {
+	
+	private boolean flag;
+	Test(boolean flag) {
+		this.flag = flag;
+	}
+	public void run() {
+		if (flag) {
+			synchronized(MyLock.locka) {
+				System.out.println("if locka");
+				synchronized(MyLock.lockb) {
+					System.out.println("if lockb");
+				}
+			}
+		}
+		else {
+			synchronized(MyLock.lockb) {
+				System.out.println("else lockb");
+				synchronized(MyLock.locka) {
+					System.out.println("else lockb");
+				}
+			}
+		}
+	}
+	
+}
+
+class MyLock {
+	static Object locka = new Object();  //静态后方便直接调用
+	static Object lockb = new Object();
+}
+
+class DeadLockTest {
+
+	public static void main(String[] args) {
+		Thread t1 = new Thread(new Test(true));
+		Thread t2 = new Thread(new Test(false));
+		t1.start();
+		try{Thread.sleep(10);}catch(Exception e){}  //加上就不死锁了，不加可能死锁
+		t2.start();
+	}
+}
