@@ -1,0 +1,53 @@
+/*
+死锁。
+
+死锁的原因：同步中嵌套同步，多个进程同时抢到不同的锁，都在等待，互不相让
+在该程序中,	假如线程0在16行打开obj锁，同时1线程在27行打开this锁，
+此时下一步	，线程0和线程1都需要双方的锁，故都在等待，从而出现了死锁
+*/
+class Ticket implements Runnable {
+	
+	private  int tick = 100;
+	Object obj = new Object();
+	boolean flag = true;
+	public void run() {  
+		if (flag) {
+			while(true) {
+				synchronized(obj) {//这个obj锁与28行的obj是同一个锁，虽然锁的位置不一样
+					show();
+				}
+			}
+		}
+		else                       			  
+			while(true)
+				this.show();
+		
+	}
+	
+	public synchronized void show() {  //this锁
+		synchronized(obj) {
+			if (tick>0) {
+				try{Thread.sleep(10);}catch(Exception e){}
+				System.out.println(Thread.currentThread().getName()+"code: "+tick--);
+			}
+		}
+		
+	}
+	
+}
+
+class DeadLockDemo {
+
+	public static void main(String[] args) {
+		Ticket t = new Ticket();
+		
+		Thread t1 = new Thread(t);
+		Thread t2 = new Thread(t);
+
+		t1.start();
+		try{Thread.sleep(10);}catch(Exception e){}  
+		t.flag = false;
+		t2.start();
+		
+	}
+}
